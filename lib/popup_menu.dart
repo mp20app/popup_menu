@@ -190,6 +190,17 @@ class PopupMenu {
     return itemHeight * _row;
   }
 
+  bool _tapOutside(Offset tapPosition, Offset offset) {
+    double w = menuWidth();
+    double h = menuHeight();
+    bool outsideX =
+        tapPosition.dx < offset.dx || tapPosition.dx >= offset.dx + w;
+    bool outsideY =
+        tapPosition.dy < offset.dy || tapPosition.dy >= offset.dy + h;
+
+    return outsideX || outsideY;
+  }
+
   LayoutBuilder buildPopupMenuLayout(Offset offset) {
     return LayoutBuilder(builder: (context, constraints) {
       return GestureDetector(
@@ -197,12 +208,13 @@ class PopupMenu {
         onTap: () {
           dismiss();
         },
-//        onTapDown: (TapDownDetails details) {
-//          dismiss();
-//        },
+        onTapDown: (TapDownDetails details) {
+          if (_tapOutside(details.localPosition, offset)) dismiss();
+        },
         // onPanStart: (DragStartDetails details) {
         //   dismiss();
         // },
+
         onVerticalDragStart: (DragStartDetails details) {
           dismiss();
         },
@@ -435,6 +447,7 @@ class _MenuItemWidgetState extends State<_MenuItemWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (details) {
         color = highlightColor;
         setState(() {});
