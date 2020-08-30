@@ -467,7 +467,7 @@ class _MenuItemWidgetState extends State<_MenuItemWidget> {
   }
 
   Widget _createContent() {
-    if (widget.item.menuImage != null) {
+    if (widget.item.menuImage != null && widget.item.menuTitle != null) {
       // image and text
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -488,6 +488,13 @@ class _MenuItemWidgetState extends State<_MenuItemWidget> {
             ),
           )
         ],
+      );
+    } else if (widget.item.menuImage != null) {
+      // only image
+      return Container(
+        child: Center(
+          child: widget.item.menuImage,
+        ),
       );
     } else {
       // only text
