@@ -51,7 +51,8 @@ class MenuItem extends MenuItemProvider {
 enum MenuType { big, oneLine }
 
 typedef MenuClickCallback = Function(MenuItemProvider item);
-typedef PopupMenuStateChanged = Function(bool isShow);
+typedef PopupMenuStateChanged = Function(bool isShow, dynamic userInfo);
+typedef DismissCallback = Function(dynamic userInfo);
 
 class PopupMenu {
   final double itemWidth;
@@ -59,6 +60,8 @@ class PopupMenu {
   final double arrowHeight;
   OverlayEntry _entry;
   List<MenuItemProvider> items;
+  var userInfo;
+  double elevation;
 
   /// row count
   int _row;
@@ -79,7 +82,7 @@ class PopupMenu {
   int _maxColumn;
 
   /// callback
-  VoidCallback dismissCallback;
+  DismissCallback dismissCallback;
   MenuClickCallback onClickMenu;
   PopupMenuStateChanged stateChanged;
 
@@ -103,13 +106,15 @@ class PopupMenu {
     this.arrowHeight = 10.0,
     MenuClickCallback onClickMenu,
     BuildContext context,
-    VoidCallback onDismiss,
+    DismissCallback onDismiss,
     int maxColumn,
     Color backgroundColor,
     Color highlightColor,
     Color lineColor,
     PopupMenuStateChanged stateChanged,
     List<MenuItemProvider> items,
+    this.userInfo,
+    this.elevation = 4.0,
   }) {
     this.onClickMenu = onClickMenu;
     this.dismissCallback = onDismiss;
@@ -144,7 +149,7 @@ class PopupMenu {
     Overlay.of(PopupMenu.context).insert(_entry);
     _isShow = true;
     if (this.stateChanged != null) {
-      this.stateChanged(true);
+      this.stateChanged(true, userInfo);
     }
   }
 
@@ -270,11 +275,11 @@ class PopupMenu {
     _entry.remove();
     _isShow = false;
     if (dismissCallback != null) {
-      dismissCallback();
+      dismissCallback(userInfo);
     }
 
     if (this.stateChanged != null) {
-      this.stateChanged(false);
+      this.stateChanged(false, userInfo);
     }
   }
 }
@@ -432,7 +437,7 @@ class _PopupMenuLayoutState extends State<_PopupMenuLayout>
                     opacity: animationController
                         .drive(CurveTween(curve: Curves.linear)),
                     child: Material(
-                        elevation: 6,
+                        elevation: widget.popupMenu.elevation,
                         shape: PopupMenuBorder(
                           radius: 10.0,
                           arrowHeight: widget.popupMenu.arrowHeight,

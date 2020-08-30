@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ], onClickMenu: onClickMenu, onDismiss: onDismiss, maxColumn: 4);
   }
 
-  void stateChanged(bool isShow) {
+  void stateChanged(bool isShow, dynamic userInfo) {
     print('menu is ${isShow ? 'showing' : 'closed'}');
   }
 
@@ -71,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print('Click menu -> ${item.menuTitle}');
   }
 
-  void onDismiss() {
+  void onDismiss(dynamic userInfo) {
     print('Menu is dismiss');
   }
 
