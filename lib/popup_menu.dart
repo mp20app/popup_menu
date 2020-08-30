@@ -224,43 +224,37 @@ class PopupMenu {
         child: Container(
           child: Stack(
             children: <Widget>[
-              // triangle arrow
-              Positioned(
-                left: _showRect.left + _showRect.width / 2.0 - 7.5,
-                top: _isDown
-                    ? offset.dy + menuHeight()
-                    : offset.dy - arrowHeight,
-                child: CustomPaint(
-                  size: Size(15.0, arrowHeight),
-                  painter:
-                      TrianglePainter(isDown: _isDown, color: _backgroundColor),
-                ),
-              ),
-              // menu content
               Positioned(
                 left: offset.dx,
                 top: offset.dy,
                 child: Container(
                   width: menuWidth(),
                   height: menuHeight(),
-                  child: Column(
-                    children: <Widget>[
-                      ClipRRect(
-                          borderRadius: BorderRadius.circular(10.0),
-                          child: Container(
-                            width: menuWidth(),
-                            height: menuHeight(),
-                            decoration: BoxDecoration(
-                                color: _backgroundColor,
-                                borderRadius: BorderRadius.circular(10.0)),
-                            child: Column(
-                              children: _createRows(),
-                            ),
-                          )),
-                    ],
-                  ),
+                  child: Material(
+                      elevation: 6,
+                      shape: PopupMenuBorder(
+                        radius: 10.0,
+                        arrowHeight: arrowHeight,
+                        isDown: _isDown,
+                        arrowX:
+                            _showRect.left + _showRect.width / 2.0 - offset.dx,
+                      ),
+                      color: _backgroundColor,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: Container(
+                          width: menuWidth(),
+                          height: menuHeight(),
+                          //decoration: BoxDecoration(
+                          //    color: _backgroundColor,
+                          //    borderRadius: BorderRadius.circular(10.0)),
+                          child: Column(
+                            children: _createRows(),
+                          ),
+                        ),
+                      )),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -272,11 +266,11 @@ class PopupMenu {
   List<Widget> _createRows() {
     List<Widget> rows = [];
     for (int i = 0; i < _row; i++) {
-      Color color =
-          (i < _row - 1 && _row != 1) ? _lineColor : Colors.transparent;
       Widget rowWidget = Container(
-        decoration:
-            BoxDecoration(border: Border(bottom: BorderSide(color: color))),
+        decoration: BoxDecoration(
+            border: (i < _row - 1)
+                ? Border(bottom: BorderSide(color: _lineColor))
+                : null),
         height: itemHeight,
         child: Row(
           children: _createRowItems(i),
@@ -371,7 +365,7 @@ class PopupMenu {
       showLine: showLine,
       clickCallback: itemClicked,
       lineColor: _lineColor,
-      backgroundColor: _backgroundColor,
+      backgroundColor: Colors.transparent,
       highlightColor: _highlightColor,
     );
   }

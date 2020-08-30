@@ -152,9 +152,6 @@ class _MyHomePageState extends State<MyHomePage> {
         maxColumn: 3,
         items: [
           MenuItem(
-            image: Image.asset('assets/copy.png'),
-          ),
-          MenuItem(
               image: Icon(
             Icons.power,
             color: Colors.white,

@@ -1,35 +1,67 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
-// 画弹出菜单下面的三角形
-class TrianglePainter extends CustomPainter {
-  bool isDown;
-  Color color;
+class PopupMenuBorder extends ShapeBorder {
+  final bool usePadding;
+  final double radius;
+  final double arrowHeight;
+  final bool isDown;
+  final bool drawArrow;
+  final double arrowX;
 
-  TrianglePainter({this.isDown = true, this.color});
+  const PopupMenuBorder({
+    this.isDown = true,
+    this.radius,
+    this.arrowHeight = 10,
+    this.usePadding = false,
+    @required this.arrowX,
+  }) : this.drawArrow = arrowHeight > 0.0;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint _paint = new Paint();
-    _paint.strokeWidth = 2.0;
-    _paint.color = color;
-    _paint.style = PaintingStyle.fill;
-
-    Path path = new Path();
+  void trianglePathFromAlignment(
+      {Path path, Rect rect, double size, double radius, bool isDown}) {
     if (isDown) {
-      path.moveTo(0.0, -1.0);
-      path.lineTo(size.width, -1.0);
-      path.lineTo(size.width / 2.0, size.height);
+      final Offset arrowOffset = Offset(arrowX, rect.bottom);
+      path
+        ..moveTo(arrowOffset.dx + size, arrowOffset.dy)
+        ..lineTo(arrowOffset.dx, arrowOffset.dy + size)
+        ..lineTo(arrowOffset.dx - size, arrowOffset.dy);
     } else {
-      path.moveTo(size.width / 2.0, 0.0);
-      path.lineTo(0.0, size.height + 1);
-      path.lineTo(size.width, size.height + 1);
+      final Offset arrowOffset = Offset(arrowX, rect.top);
+      path
+        ..moveTo(arrowOffset.dx - size, arrowOffset.dy)
+        ..lineTo(arrowOffset.dx, arrowOffset.dy - size)
+        ..lineTo(arrowOffset.dx + size, arrowOffset.dy);
     }
-
-    canvas.drawPath(path, _paint);
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
+  EdgeInsetsGeometry get dimensions =>
+      EdgeInsets.only(bottom: usePadding ? 20 : 0);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection textDirection}) => null;
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
+    rect = Rect.fromPoints(rect.topLeft, rect.bottomRight);
+    var path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          rect, Radius.circular(radius ?? rect.height / 2)));
+    if (drawArrow) {
+      trianglePathFromAlignment(
+          path: path,
+          rect: rect,
+          size: arrowHeight,
+          radius: radius,
+          isDown: isDown);
+    }
+    path.close();
+    return path;
   }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
 }
