@@ -63,6 +63,10 @@ class PopupMenu {
   var userInfo;
   double elevation;
 
+  Duration animationDuration;
+  Curve animationSlideCurve;
+  Curve animationFadeCurve;
+
   /// row count
   int _row;
 
@@ -115,6 +119,9 @@ class PopupMenu {
     List<MenuItemProvider> items,
     this.userInfo,
     this.elevation = 4.0,
+    this.animationDuration = const Duration(milliseconds: 400),
+    this.animationSlideCurve = Curves.easeOut,
+    this.animationFadeCurve = Curves.easeOut,
   }) {
     this.onClickMenu = onClickMenu;
     this.dismissCallback = onDismiss;
@@ -307,7 +314,7 @@ class _PopupMenuLayoutState extends State<_PopupMenuLayout>
   void initState() {
     super.initState();
     animationController = AnimationController(
-      duration: Duration(milliseconds: 400),
+      duration: widget.popupMenu.animationDuration,
       vsync: this,
     );
     const double dist = 0.1;
@@ -316,16 +323,15 @@ class _PopupMenuLayoutState extends State<_PopupMenuLayout>
         begin: const Offset(0.0, dist),
         end: const Offset(0.0, 0.0),
       ).animate(CurvedAnimation(
-        parent: animationController,
-        curve: Curves.bounceOut,
-      ));
+          parent: animationController,
+          curve: widget.popupMenu.animationSlideCurve));
     } else {
       slideAnimation = Tween<Offset>(
         begin: const Offset(0.0, -dist),
         end: const Offset(0.0, 0.0),
       ).animate(CurvedAnimation(
         parent: animationController,
-        curve: Curves.bounceOut,
+        curve: widget.popupMenu.animationSlideCurve,
       ));
     }
 
@@ -434,8 +440,8 @@ class _PopupMenuLayoutState extends State<_PopupMenuLayout>
                 child: SlideTransition(
                   position: slideAnimation,
                   child: FadeTransition(
-                    opacity: animationController
-                        .drive(CurveTween(curve: Curves.linear)),
+                    opacity: animationController.drive(
+                        CurveTween(curve: widget.popupMenu.animationFadeCurve)),
                     child: Material(
                         elevation: widget.popupMenu.elevation,
                         shape: PopupMenuBorder(
