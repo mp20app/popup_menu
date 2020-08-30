@@ -16,9 +16,9 @@ abstract class MenuItemProvider {
 }
 
 class MenuItem extends MenuItemProvider {
-  Widget image; // 图标名称
-  String title; // 菜单标题
-  var userInfo; // 额外的菜单荐信息
+  Widget image;
+  String title;
+  var userInfo;
   TextStyle textStyle;
   TextAlign textAlign;
 
@@ -151,6 +151,56 @@ class PopupMenu {
         offset.dx, offset.dy, renderBox.size.width, renderBox.size.height);
   }
 
+  // calculate row count
+  int _calculateRowCount() {
+    if (items == null || items.length == 0) {
+      debugPrint('error menu items can not be null');
+      return 0;
+    }
+
+    int itemCount = items.length;
+
+    if (_calculateColCount() == 1) {
+      return itemCount;
+    }
+
+    int row = (itemCount - 1) ~/ _calculateColCount() + 1;
+
+    return row;
+  }
+
+  // calculate col count
+  int _calculateColCount() {
+    if (items == null || items.length == 0) {
+      debugPrint('error menu items can not be null');
+      return 0;
+    }
+
+    int itemCount = items.length;
+    if (_maxColumn != 4 && _maxColumn > 0) {
+      return _maxColumn;
+    }
+
+    if (itemCount == 4) {
+      // 4个显示成两行
+      return 2;
+    }
+
+    if (itemCount <= _maxColumn) {
+      return itemCount;
+    }
+
+    if (itemCount == 5) {
+      return 3;
+    }
+
+    if (itemCount == 6) {
+      return 3;
+    }
+
+    return _maxColumn;
+  }
+
   void _calculatePosition(BuildContext context) {
     _col = _calculateColCount();
     _row = _calculateRowCount();
@@ -203,179 +253,8 @@ class PopupMenu {
 
   LayoutBuilder buildPopupMenuLayout(Offset offset) {
     return LayoutBuilder(builder: (context, constraints) {
-      return GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          dismiss();
-        },
-        onTapDown: (TapDownDetails details) {
-          if (_tapOutside(details.localPosition, offset)) dismiss();
-        },
-        // onPanStart: (DragStartDetails details) {
-        //   dismiss();
-        // },
-
-        onVerticalDragStart: (DragStartDetails details) {
-          dismiss();
-        },
-        onHorizontalDragStart: (DragStartDetails details) {
-          dismiss();
-        },
-        child: Container(
-          child: Stack(
-            children: <Widget>[
-              Positioned(
-                left: offset.dx,
-                top: offset.dy,
-                child: Container(
-                  width: menuWidth(),
-                  height: menuHeight(),
-                  child: Material(
-                      elevation: 6,
-                      shape: PopupMenuBorder(
-                        radius: 10.0,
-                        arrowHeight: arrowHeight,
-                        isDown: _isDown,
-                        arrowX:
-                            _showRect.left + _showRect.width / 2.0 - offset.dx,
-                      ),
-                      color: _backgroundColor,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10.0),
-                        child: Container(
-                          width: menuWidth(),
-                          height: menuHeight(),
-                          //decoration: BoxDecoration(
-                          //    color: _backgroundColor,
-                          //    borderRadius: BorderRadius.circular(10.0)),
-                          child: Column(
-                            children: _createRows(),
-                          ),
-                        ),
-                      )),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _PopupMenuLayout(popupMenu: this);
     });
-  }
-
-  // 创建行
-  List<Widget> _createRows() {
-    List<Widget> rows = [];
-    for (int i = 0; i < _row; i++) {
-      Widget rowWidget = Container(
-        decoration: BoxDecoration(
-            border: (i < _row - 1)
-                ? Border(bottom: BorderSide(color: _lineColor))
-                : null),
-        height: itemHeight,
-        child: Row(
-          children: _createRowItems(i),
-        ),
-      );
-
-      rows.add(rowWidget);
-    }
-
-    return rows;
-  }
-
-  // 创建一行的item,  row 从0开始算
-  List<Widget> _createRowItems(int row) {
-    List<MenuItemProvider> subItems =
-        items.sublist(row * _col, min(row * _col + _col, items.length));
-    List<Widget> itemWidgets = [];
-    int i = 0;
-    for (var item in subItems) {
-      itemWidgets.add(_createMenuItem(
-        item,
-        i < (_col - 1),
-      ));
-      i++;
-    }
-
-    return itemWidgets;
-  }
-
-  // calculate row count
-  int _calculateRowCount() {
-    if (items == null || items.length == 0) {
-      debugPrint('error menu items can not be null');
-      return 0;
-    }
-
-    int itemCount = items.length;
-
-    if (_calculateColCount() == 1) {
-      return itemCount;
-    }
-
-    int row = (itemCount - 1) ~/ _calculateColCount() + 1;
-
-    return row;
-  }
-
-  // calculate col count
-  int _calculateColCount() {
-    if (items == null || items.length == 0) {
-      debugPrint('error menu items can not be null');
-      return 0;
-    }
-
-    int itemCount = items.length;
-    if (_maxColumn != 4 && _maxColumn > 0) {
-      return _maxColumn;
-    }
-
-    if (itemCount == 4) {
-      // 4个显示成两行
-      return 2;
-    }
-
-    if (itemCount <= _maxColumn) {
-      return itemCount;
-    }
-
-    if (itemCount == 5) {
-      return 3;
-    }
-
-    if (itemCount == 6) {
-      return 3;
-    }
-
-    return _maxColumn;
-  }
-
-  double get screenWidth {
-    double width = window.physicalSize.width;
-    double ratio = window.devicePixelRatio;
-    return width / ratio;
-  }
-
-  Widget _createMenuItem(MenuItemProvider item, bool showLine) {
-    return _MenuItemWidget(
-      itemHeight: itemHeight,
-      arrowHeight: arrowHeight,
-      itemWidth: itemWidth,
-      item: item,
-      showLine: showLine,
-      clickCallback: itemClicked,
-      lineColor: _lineColor,
-      backgroundColor: Colors.transparent,
-      highlightColor: _highlightColor,
-    );
-  }
-
-  void itemClicked(MenuItemProvider item) {
-    if (onClickMenu != null) {
-      onClickMenu(item);
-    }
-
-    dismiss();
   }
 
   void dismiss() {
@@ -393,6 +272,190 @@ class PopupMenu {
     if (this.stateChanged != null) {
       this.stateChanged(false);
     }
+  }
+}
+
+class _PopupMenuLayout extends StatefulWidget {
+  final PopupMenu popupMenu;
+
+  _PopupMenuLayout({
+    Key key,
+    @required this.popupMenu,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _PopupMenuLayoutState();
+  }
+}
+
+class _PopupMenuLayoutState extends State<_PopupMenuLayout>
+    with SingleTickerProviderStateMixin {
+  AnimationController animationController;
+  Animation<Offset> slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    animationController = AnimationController(
+      duration: Duration(milliseconds: 400),
+      vsync: this,
+    );
+    const double dist = 0.1;
+    if (widget.popupMenu._isDown) {
+      slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, dist),
+        end: const Offset(0.0, 0.0),
+      ).animate(CurvedAnimation(
+        parent: animationController,
+        curve: Curves.bounceOut,
+      ));
+    } else {
+      slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, -dist),
+        end: const Offset(0.0, 0.0),
+      ).animate(CurvedAnimation(
+        parent: animationController,
+        curve: Curves.bounceOut,
+      ));
+    }
+
+    animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    super.dispose();
+  }
+
+  List<Widget> _createRows() {
+    List<Widget> rows = [];
+    for (int i = 0; i < widget.popupMenu._row; i++) {
+      Widget rowWidget = Container(
+        decoration: BoxDecoration(
+            border: (i < widget.popupMenu._row - 1)
+                ? Border(bottom: BorderSide(color: widget.popupMenu._lineColor))
+                : null),
+        height: widget.popupMenu.itemHeight,
+        child: Row(
+          children: _createRowItems(i),
+        ),
+      );
+
+      rows.add(rowWidget);
+    }
+
+    return rows;
+  }
+
+  List<Widget> _createRowItems(int row) {
+    List<MenuItemProvider> subItems = widget.popupMenu.items.sublist(
+        row * widget.popupMenu._col,
+        min(row * widget.popupMenu._col + widget.popupMenu._col,
+            widget.popupMenu.items.length));
+    List<Widget> itemWidgets = [];
+    int i = 0;
+    for (var item in subItems) {
+      itemWidgets.add(_createMenuItem(
+        item,
+        i < (widget.popupMenu._col - 1),
+      ));
+      i++;
+    }
+
+    return itemWidgets;
+  }
+
+  double get screenWidth {
+    double width = window.physicalSize.width;
+    double ratio = window.devicePixelRatio;
+    return width / ratio;
+  }
+
+  Widget _createMenuItem(MenuItemProvider item, bool showLine) {
+    return _MenuItemWidget(
+      itemHeight: widget.popupMenu.itemHeight,
+      arrowHeight: widget.popupMenu.arrowHeight,
+      itemWidth: widget.popupMenu.itemWidth,
+      item: item,
+      showLine: showLine,
+      clickCallback: itemClicked,
+      lineColor: widget.popupMenu._lineColor,
+      backgroundColor: Colors.transparent,
+      highlightColor: widget.popupMenu._highlightColor,
+    );
+  }
+
+  void itemClicked(MenuItemProvider item) {
+    if (widget.popupMenu.onClickMenu != null) {
+      widget.popupMenu.onClickMenu(item);
+    }
+
+    widget.popupMenu.dismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        widget.popupMenu.dismiss();
+      },
+      onTapDown: (TapDownDetails details) {
+        if (widget.popupMenu
+            ._tapOutside(details.localPosition, widget.popupMenu._offset))
+          widget.popupMenu.dismiss();
+      },
+      onVerticalDragStart: (DragStartDetails details) {
+        widget.popupMenu.dismiss();
+      },
+      onHorizontalDragStart: (DragStartDetails details) {
+        widget.popupMenu.dismiss();
+      },
+      child: Container(
+        child: Stack(
+          children: <Widget>[
+            Positioned(
+              left: widget.popupMenu._offset.dx,
+              top: widget.popupMenu._offset.dy,
+              child: Container(
+                width: widget.popupMenu.menuWidth(),
+                height: widget.popupMenu.menuHeight(),
+                child: SlideTransition(
+                  position: slideAnimation,
+                  child: FadeTransition(
+                    opacity: animationController
+                        .drive(CurveTween(curve: Curves.linear)),
+                    child: Material(
+                        elevation: 6,
+                        shape: PopupMenuBorder(
+                          radius: 10.0,
+                          arrowHeight: widget.popupMenu.arrowHeight,
+                          isDown: widget.popupMenu._isDown,
+                          arrowX: widget.popupMenu._showRect.left +
+                              widget.popupMenu._showRect.width / 2.0 -
+                              widget.popupMenu._offset.dx,
+                        ),
+                        color: widget.popupMenu._backgroundColor,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10.0),
+                          child: Container(
+                            width: widget.popupMenu.menuWidth(),
+                            height: widget.popupMenu.menuHeight(),
+                            child: Column(
+                              children: _createRows(),
+                            ),
+                          ),
+                        )),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
